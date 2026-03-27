@@ -77,12 +77,9 @@ class HederaClient:
     # ------------------------------------------------------------------
 
     def __init__(self) -> None:
-        # Treasury credentials
-        self.treasury_account_id: str = os.environ["HEDERA_ACCOUNT_ID"]
-        self.treasury_private_key: str = os.environ["HEDERA_PRIVATE_KEY"]
-
-        if not self.treasury_account_id:
-            raise ValueError("HEDERA_ACCOUNT_ID is empty")
+        # Treasury credentials (graceful fallback for stub mode)
+        self.treasury_account_id: str = os.environ.get("HEDERA_ACCOUNT_ID", "0.0.0")
+        self.treasury_private_key: str = os.environ.get("HEDERA_PRIVATE_KEY", "stub")
 
         # Wallet pool
         wallet_path = os.environ.get("WALLET_POOL_PATH", "./wallets.json")
