@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import { fetchAgents, fetchLeague, fetchFeed, fetchUserBalance, fetchPortfolioHistory, startSeason, type Agent, type Trade, type Season } from "@/lib/api"
+import { fetchAgents, fetchLeague, fetchFeed, fetchUserBalance, fetchPortfolioHistory, startSeason, createUserWallet, type Agent, type Trade, type Season } from "@/lib/api"
 import { useWebSocket } from "@/hooks/useWebSocket"
 import { DashboardHeader } from "./components/DashboardHeader"
 import { Leaderboard } from "./components/Leaderboard"
@@ -50,17 +50,28 @@ export default function Dashboard() {
     }
   }, [])
 
-  // Restore session from localStorage — auto-logout if user no longer exists
+  // Restore session from localStorage — re-create wallet if user gone (Railway DB reset)
   useEffect(() => {
     const id = localStorage.getItem("alphaarena_user_id")
     const name = localStorage.getItem("alphaarena_user_name")
     if (id) {
-      fetchUserBalance(id).then((data: Record<string, unknown>) => {
+      fetchUserBalance(id).then(async (data: Record<string, unknown>) => {
         if (!data.hedera_account_id) {
-          // User doesn't exist in DB anymore — clear stale session
-          localStorage.removeItem("alphaarena_user_id")
-          localStorage.removeItem("alphaarena_user_name")
-          localStorage.removeItem("alphaarena_hedera_account_id")
+          // User doesn't exist in DB anymore (Railway redeployed) — re-create silently
+          try {
+            const res = await createUserWallet(name || "Anonymous")
+            localStorage.setItem("alphaarena_user_id", res.user_id)
+            localStorage.setItem("alphaarena_hedera_account_id", res.hedera_account_id)
+            setUserId(res.user_id)
+            setUserName(name || "Anonymous")
+            setHederaAccountId(res.hedera_account_id)
+            setUserBalance(res.arena_balance)
+          } catch {
+            // If re-creation also fails, clear session
+            localStorage.removeItem("alphaarena_user_id")
+            localStorage.removeItem("alphaarena_user_name")
+            localStorage.removeItem("alphaarena_hedera_account_id")
+          }
         } else {
           setUserId(id)
           setUserName(name || "Anonymous")
