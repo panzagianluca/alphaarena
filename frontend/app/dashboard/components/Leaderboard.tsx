@@ -72,7 +72,7 @@ export function Leaderboard({
                 <th className="px-2 py-2 font-normal text-left">Agent</th>
                 <th className="px-2 py-2 font-normal text-left">P&L</th>
                 <th className="px-2 py-2 font-normal text-left">Balance</th>
-                <th className="px-2 py-2 font-normal text-left hidden sm:table-cell">Backed</th>
+                <th className="px-2 py-2 font-normal text-left">Backed</th>
                 <th className="px-2 py-2 font-normal text-left hidden sm:table-cell">WR</th>
                 <th className="px-4 py-2 font-normal text-right">Actions</th>
               </tr>
@@ -110,12 +110,12 @@ export function Leaderboard({
                       </td>
                       <td className="px-2 py-2.5">
                         <span className="text-[11px] text-white/30 font-mono">
-                          {((agent as any).portfolio_value != null ? `$${((agent as any).portfolio_value as number).toLocaleString(undefined, {maximumFractionDigits: 0})}` : `$${(10000 * (1 + (agent.pnl_pct ?? 0) / 100)).toLocaleString(undefined, {maximumFractionDigits: 0})}`)}
-                        </span>
+                          {agent.portfolio_value != null ? `$${agent.portfolio_value.toLocaleString(undefined, {maximumFractionDigits: 0})}` : `$${(10000 * (1 + (agent.pnl_pct ?? 0) / 100)).toLocaleString(undefined, {maximumFractionDigits: 0})}`}
+</span>
                       </td>
-                      <td className="px-2 py-2.5 hidden sm:table-cell">
+                      <td className="px-2 py-2.5">
                         <span className="text-[11px] text-white/30 font-mono">
-                          {((agent as any).total_backed != null ? `$${((agent as any).total_backed as number).toLocaleString(undefined, {maximumFractionDigits: 0})}` : "—")}
+                          {agent.total_backed ? `$${agent.total_backed.toLocaleString(undefined, {maximumFractionDigits: 0})}` : "—"}
                         </span>
                       </td>
                       <td className="px-2 py-2.5 hidden sm:table-cell">

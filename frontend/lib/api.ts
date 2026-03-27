@@ -18,6 +18,8 @@ export interface Agent {
   max_drawdown_pct: number | null
   total_trades: number | null
   rank: number | null
+  total_backed: number | null
+  portfolio_value: number | null
 }
 
 export interface Trade {
