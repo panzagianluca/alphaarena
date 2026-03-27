@@ -8,7 +8,7 @@ venv/
 # Env
 .env
 engine/.env
-wallets.json
+# wallets.json — committed for testnet demo
 
 # DB
 *.db
