@@ -27,7 +27,7 @@ export function CreateAgentModal({
   const [agentName, setAgentName] = useState("")
   const [thesis, setThesis] = useState("")
   const [instruments, setInstruments] = useState<string[]>([...INSTRUMENTS])
-  const [model, setModel] = useState(MODEL_OPTIONS[0].value)
+  const [model, setModel] = useState<string>(MODEL_OPTIONS[0].value)
   const [loading, setLoading] = useState(false)
   const [templates, setTemplates] = useState<Record<string, AgentTemplate>>({})
 
