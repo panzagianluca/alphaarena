@@ -200,13 +200,34 @@ class Orchestrator:
                 portfolio_snap = self.portfolio.get_portfolio(agent.id, prices)
                 recent_trades = await self.db.fetchall(
                     "SELECT * FROM trades WHERE agent_id = ? AND season_id = ? "
-                    "ORDER BY round_number DESC LIMIT 5",
+                    "ORDER BY round_number DESC LIMIT 10",
                     (agent.id, self.season_id),
                 )
                 league_standings = await self.db.fetchall(
                     "SELECT * FROM leaderboard WHERE season_id = ? ORDER BY rank ASC",
                     (self.season_id,),
                 )
+
+                # Build reflection from recent trades
+                reflection = ""
+                if recent_trades:
+                    wins = [t for t in recent_trades if t.get("portfolio_value_after", 0) > 10000]
+                    losses = [t for t in recent_trades if t.get("portfolio_value_after", 0) < 10000]
+                    reflection = (
+                        f"REFLECTION: You have made {len(recent_trades)} trades so far. "
+                        f"{len(wins)} improved your portfolio, {len(losses)} hurt it. "
+                    )
+                    if recent_trades[0].get("reasoning"):
+                        last_reasoning = recent_trades[0]["reasoning"]
+                        last_action = recent_trades[0].get("action", "?")
+                        last_asset = recent_trades[0].get("asset", "?")
+                        last_pv = recent_trades[0].get("portfolio_value_after", 0)
+                        reflection += (
+                            f"Your last trade was {last_action} {last_asset} "
+                            f"(reasoning: '{last_reasoning[:100]}'). "
+                            f"Portfolio after: ${last_pv:,.0f}. "
+                            f"Reflect on whether your strategy is working and adapt if needed."
+                        )
 
                 self._trade_count += 1
                 trade_number = self._trade_count
@@ -218,6 +239,7 @@ class Orchestrator:
                     portfolio=portfolio_snap,
                     recent_trades=recent_trades,
                     league_standings=league_standings,
+                    reflection=reflection,
                 )
 
                 # 3. Agent decides (LLM call)

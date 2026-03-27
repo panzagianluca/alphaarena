@@ -83,6 +83,7 @@ class RoundContext(BaseModel):
     portfolio: dict  # flexible: cash, positions, total_value, etc.
     recent_trades: list[dict] = Field(default_factory=list)
     league_standings: list[dict] = Field(default_factory=list)
+    reflection: str = ""  # Self-reflection on past performance
 
 
 # ---------------------------------------------------------------------------
