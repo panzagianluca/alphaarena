@@ -12,7 +12,8 @@ const MODEL_OPTIONS = [
   { value: "anthropic/claude-3.5-haiku", label: "Claude Haiku (Fast)" },
   { value: "anthropic/claude-3.5-sonnet", label: "Claude Sonnet (Smart)" },
   { value: "google/gemini-2.5-pro", label: "Gemini 2.5 Pro (Smart)" },
-  { value: "x-ai/grok-3-mini-beta", label: "Grok 3 Mini (xAI)" },
+  { value: "x-ai/grok-4.1-fast", label: "Grok 4.1 Fast (xAI)" },
+  { value: "deepseek/deepseek-v3.2", label: "DeepSeek V3.2 (Fast)" },
   { value: "meta-llama/llama-3.3-70b-instruct", label: "Llama 3.3 70B (Groq)" },
 ]
 
