@@ -2,18 +2,19 @@
 
 import { useState, useEffect } from "react"
 import { createAgent, fetchTemplates, type AgentTemplate } from "@/lib/api"
-// Native select used instead of shadcn Select for simpler dark theme styling
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { toast } from "sonner"
 
 const INSTRUMENTS = ["BTC", "ETH", "HBAR", "DOGE"] as const
 
 const MODEL_OPTIONS = [
-  { value: "google/gemini-2.5-flash", label: "Gemini 2.5 Flash (Fast & Cheap)" },
+  { value: "google/gemini-2.5-flash", label: "Gemini 2.5 Flash (Fast)" },
   { value: "anthropic/claude-3.5-haiku", label: "Claude Haiku (Fast)" },
   { value: "anthropic/claude-3.5-sonnet", label: "Claude Sonnet (Smart)" },
   { value: "google/gemini-2.5-pro", label: "Gemini 2.5 Pro (Smart)" },
-  { value: "meta-llama/llama-3.3-70b-instruct", label: "Llama 3.3 70B (Groq Ultra Fast)" },
-] as const
+  { value: "x-ai/grok-3-mini-beta", label: "Grok 3 Mini (xAI)" },
+  { value: "meta-llama/llama-3.3-70b-instruct", label: "Llama 3.3 70B (Groq)" },
+]
 
 export function CreateAgentModal({
   open,
@@ -176,18 +177,18 @@ export function CreateAgentModal({
             Model
           </span>
           <div className="mt-2">
-            <select
-              value={model}
-              onChange={(e) => setModel(e.target.value)}
-              className="w-full bg-black border border-[#1a1a1a] rounded-md px-3 py-2 text-sm text-white/80 appearance-none cursor-pointer hover:border-[#2a2a2a] transition-colors"
-              style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.3)' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 12px center" }}
-            >
-              {MODEL_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value} className="bg-[#0a0a0a] text-white/80">
-                  {opt.label}
-                </option>
-              ))}
-            </select>
+            <Select value={model} onValueChange={(v) => { if (v) setModel(v) }}>
+              <SelectTrigger className="w-full bg-black border-[#1a1a1a] text-sm text-white/80 hover:border-[#2a2a2a] focus:ring-[#c9a84c]/20 focus:ring-offset-0">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-[#0a0a0a] border-[#1a1a1a]">
+                {MODEL_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value} className="text-white/80 focus:bg-[#1a1a1a] focus:text-white cursor-pointer">
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
