@@ -7,7 +7,82 @@ import { fetchAgent, fetchAgentTrades, fetchPortfolioHistory, type Agent, type T
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
-import { Area, AreaChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts"
+import { createChart, ColorType, Time, AreaSeries } from "lightweight-charts"
+import { useRef } from "react"
+
+function AgentEquityChart({ data }: { data: Array<{ round: number; value: number }> }) {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const chartCreated = useRef(false)
+
+  useEffect(() => {
+    if (!containerRef.current || data.length === 0) return
+    if (chartCreated.current) {
+      // Chart already exists — just update
+      return
+    }
+
+    const chart = createChart(containerRef.current, {
+      width: containerRef.current.clientWidth,
+      height: 240,
+      layout: {
+        background: { type: ColorType.Solid, color: "transparent" },
+        textColor: "rgba(255,255,255,0.3)",
+        fontSize: 11,
+      },
+      grid: {
+        vertLines: { color: "#1a1a1a" },
+        horzLines: { color: "#1a1a1a" },
+      },
+      crosshair: {
+        vertLine: { color: "rgba(201,168,76,0.3)", width: 1, style: 2 },
+        horzLine: { color: "rgba(201,168,76,0.3)", width: 1, style: 2 },
+      },
+      rightPriceScale: { borderColor: "#1a1a1a" },
+      timeScale: { borderColor: "#1a1a1a", fixLeftEdge: true, fixRightEdge: true },
+    })
+
+    const series = chart.addSeries(AreaSeries, {
+      lineColor: "#c9a84c",
+      topColor: "rgba(201,168,76,0.3)",
+      bottomColor: "rgba(201,168,76,0.02)",
+      lineWidth: 2,
+      crosshairMarkerVisible: true,
+      crosshairMarkerRadius: 4,
+      crosshairMarkerBackgroundColor: "#c9a84c",
+      priceFormat: {
+        type: "custom",
+        formatter: (price: number) =>
+          price >= 1000 ? `$${(price / 1000).toFixed(1)}k` : `$${price.toFixed(0)}`,
+      },
+    })
+
+    series.setData(
+      data.map((d) => ({ time: d.round as Time, value: d.value }))
+    )
+    chart.timeScale().fitContent()
+    chartCreated.current = true
+
+    const ro = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const { width } = entry.contentRect
+        if (width > 0) chart.applyOptions({ width })
+      }
+    })
+    ro.observe(containerRef.current)
+
+    return () => {
+      ro.disconnect()
+      chart.remove()
+      chartCreated.current = false
+    }
+  }, [data])
+
+  if (data.length === 0) {
+    return <p className="text-xs text-white/30 text-center py-8">No chart data yet</p>
+  }
+
+  return <div ref={containerRef} className="w-full" style={{ height: 240 }} />
+}
 
 function timeAgo(ts: string): string {
   const normalized = ts.includes("T") ? ts : ts.replace(" ", "T") + "Z"
@@ -170,60 +245,7 @@ export default function AgentProfile() {
             <CardTitle>Equity Curve</CardTitle>
           </CardHeader>
           <CardContent>
-            {equityData.length === 0 ? (
-              <p className="text-xs text-white/30 text-center py-8">No chart data yet</p>
-            ) : (
-              <ResponsiveContainer width="100%" height={240}>
-                <AreaChart data={equityData} margin={{ top: 5, right: 20, bottom: 5, left: 10 }}>
-                  <defs>
-                    <linearGradient id="equityGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#c9a84c" stopOpacity={0.3} />
-                      <stop offset="100%" stopColor="#c9a84c" stopOpacity={0.02} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid stroke="#1a1a1a" strokeDasharray="3 3" />
-                  <XAxis
-                    dataKey="round"
-                    tick={{ fill: "rgba(255,255,255,0.3)", fontSize: 11 }}
-                    axisLine={{ stroke: "#1a1a1a" }}
-                    tickLine={{ stroke: "#1a1a1a" }}
-                    tickFormatter={(v: number) => `${Math.round(v)}`}
-                  />
-                  <YAxis
-                    domain={[
-                      (dataMin: number) => Math.floor(dataMin - Math.max((dataMin * 0.005), 10)),
-                      (dataMax: number) => Math.ceil(dataMax + Math.max((dataMax * 0.005), 10)),
-                    ]}
-                    allowDataOverflow
-                    tick={{ fill: "rgba(255,255,255,0.3)", fontSize: 11 }}
-                    axisLine={{ stroke: "#1a1a1a" }}
-                    tickLine={{ stroke: "#1a1a1a" }}
-                    tickFormatter={(v: number) =>
-                      v >= 1000 ? `$${(v / 1000).toFixed(1)}k` : `$${v}`
-                    }
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "#0a0a0a",
-                      border: "1px solid #1a1a1a",
-                      borderRadius: "8px",
-                      fontSize: "12px",
-                      color: "rgba(255,255,255,0.8)",
-                    }}
-                    labelStyle={{ color: "rgba(255,255,255,0.5)" }}
-                    formatter={(value: any) => [`$${Number(value).toLocaleString()}`, "Portfolio"]}
-                    labelFormatter={(label: any) => `Update ${label}`}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="value"
-                    stroke="#c9a84c"
-                    strokeWidth={2}
-                    fill="url(#equityGradient)"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            )}
+            <AgentEquityChart data={equityData} />
           </CardContent>
         </Card>
 

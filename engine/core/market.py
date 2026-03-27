@@ -66,18 +66,15 @@ class MarketFeed:
     # Public API: get latest prices (instant — reads from memory)
     # ------------------------------------------------------------------
 
-    async def fetch(self) -> dict[str, dict[str, Any]]:
-        """Return latest prices. If WS is live, returns cached WS data.
-        Otherwise falls back to CoinGecko REST, then mock."""
+    async def fetch(self) -> dict[str, dict[str, Any]] | None:
+        """Return latest prices from Binance WS ONLY.
+        Returns None if WS is not connected — agents should HOLD, not trade on stale data."""
         if self._prices and self._ws_connected:
             return {k: {kk: vv for kk, vv in v.items() if not kk.startswith("_")} for k, v in self._prices.items()}
 
-        # Fallback: try CoinGecko REST
-        try:
-            return await self._fetch_coingecko()
-        except Exception:
-            logger.warning("CoinGecko fallback failed, using mock prices")
-            return self._mock_prices()
+        # No fallback — return None so agents hold
+        logger.warning("Binance WS not connected — returning None (agents will hold)")
+        return None
 
     # ------------------------------------------------------------------
     # Binance WebSocket — runs as a background task
