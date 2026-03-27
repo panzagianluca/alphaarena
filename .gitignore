@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+
+# Env
+.env
+engine/.env
+wallets.json
+
+# DB
+*.db
+*.db-shm
+*.db-wal
+
+# TLDR cache
+.tldr/
+
+# Claude cache
+.claude/cache/
+.claude/tsc-cache/
+
+# Node
+node_modules/
+dist/
+.next/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+
+
+#Ignore vscode AI rules
+.github/instructions/codacy.instructions.md
