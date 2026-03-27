@@ -57,6 +57,7 @@ class MarketFeed:
         self._last_mock_prices: dict[str, float] = dict(_STARTING_PRICES)
         self._ws_connected: bool = False
         self._ws_task: asyncio.Task | None = None
+        self._cg_last_fetch: float = 0.0  # timestamp of last CoinGecko fetch
 
     @property
     def connected(self) -> bool:
@@ -70,24 +71,30 @@ class MarketFeed:
         """Return latest prices. Binance WS preferred, CoinGecko fallback.
         CoinGecko results are cached in self._prices so all agents see
         the SAME prices in the same cycle (prevents buy/sell price mismatch)."""
+        import time
+
         if self._prices and self._ws_connected:
             return {k: {kk: vv for kk, vv in v.items() if not kk.startswith("_")} for k, v in self._prices.items()}
 
-        # If we have cached prices from a previous CoinGecko call, use them
-        # (they're stale but consistent — better than None)
-        if self._prices:
+        # CoinGecko fallback — re-fetch every 30s so prices actually change
+        now = time.time()
+        if self._prices and (now - self._cg_last_fetch) < 30:
+            # Return cached CoinGecko prices (consistent for all agents in same window)
             return {k: {kk: vv for kk, vv in v.items() if not kk.startswith("_")} for k, v in self._prices.items()}
 
-        # First-time fallback: fetch from CoinGecko and CACHE in self._prices
+        # Fetch from CoinGecko and cache
         try:
             cg_prices = await self._fetch_coingecko()
-            # Store in self._prices so subsequent calls return the same data
             for symbol, data in cg_prices.items():
                 self._prices[symbol] = data
-            logger.info("CoinGecko prices cached: %s", {s: d["price_usd"] for s, d in cg_prices.items()})
+            self._cg_last_fetch = now
+            logger.info("CoinGecko prices refreshed: %s", {s: d["price_usd"] for s, d in cg_prices.items()})
             return cg_prices
         except Exception:
-            logger.warning("CoinGecko fallback also failed — no prices available")
+            # Return stale cache if available, else None
+            if self._prices:
+                return {k: {kk: vv for kk, vv in v.items() if not kk.startswith("_")} for k, v in self._prices.items()}
+            logger.warning("No prices available")
             return None
 
     # ------------------------------------------------------------------
