@@ -67,14 +67,28 @@ class MarketFeed:
     # ------------------------------------------------------------------
 
     async def fetch(self) -> dict[str, dict[str, Any]] | None:
-        """Return latest prices from Binance WS ONLY.
-        Returns None if WS is not connected — agents should HOLD, not trade on stale data."""
+        """Return latest prices. Binance WS preferred, CoinGecko fallback.
+        CoinGecko results are cached in self._prices so all agents see
+        the SAME prices in the same cycle (prevents buy/sell price mismatch)."""
         if self._prices and self._ws_connected:
             return {k: {kk: vv for kk, vv in v.items() if not kk.startswith("_")} for k, v in self._prices.items()}
 
-        # No fallback — return None so agents hold
-        logger.warning("Binance WS not connected — returning None (agents will hold)")
-        return None
+        # If we have cached prices from a previous CoinGecko call, use them
+        # (they're stale but consistent — better than None)
+        if self._prices:
+            return {k: {kk: vv for kk, vv in v.items() if not kk.startswith("_")} for k, v in self._prices.items()}
+
+        # First-time fallback: fetch from CoinGecko and CACHE in self._prices
+        try:
+            cg_prices = await self._fetch_coingecko()
+            # Store in self._prices so subsequent calls return the same data
+            for symbol, data in cg_prices.items():
+                self._prices[symbol] = data
+            logger.info("CoinGecko prices cached: %s", {s: d["price_usd"] for s, d in cg_prices.items()})
+            return cg_prices
+        except Exception:
+            logger.warning("CoinGecko fallback also failed — no prices available")
+            return None
 
     # ------------------------------------------------------------------
     # Binance WebSocket — runs as a background task

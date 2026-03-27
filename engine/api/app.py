@@ -10,7 +10,7 @@ import logging
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import RedirectResponse
+# RedirectResponse removed — root returns JSON status
 
 from engine.api.routes import router
 from engine.api.websocket import WSManager
@@ -49,7 +49,7 @@ app.add_middleware(
 
 @app.get("/")
 async def root():
-    return RedirectResponse(url="http://localhost:3001/dashboard")
+    return {"status": "ok", "service": "AlphaArena API", "docs": "/docs"}
 
 # ---------------------------------------------------------------------------
 # Include REST routes
@@ -121,7 +121,18 @@ async def startup():
         )
         logger.info("Marked stale season %d as completed", active["id"])
 
-    # 8. Auto-start a new season with any existing agents
+    # 8. Auto-seed preset agents if DB is empty
+    agent_count = await db.fetchone("SELECT COUNT(*) as c FROM agents WHERE status = 'active'")
+    if not agent_count or agent_count["c"] == 0:
+        logger.info("No agents found — seeding 4 preset agents...")
+        try:
+            from engine.agents.factory import seed_presets
+            await seed_presets(db, hedera)
+            logger.info("Preset agents seeded successfully")
+        except Exception as e:
+            logger.error("Failed to seed presets: %s", e)
+
+    # 9. Auto-start a new season
     agent_count = await db.fetchone("SELECT COUNT(*) as c FROM agents WHERE status = 'active'")
     if agent_count and agent_count["c"] > 0:
         season_id = await orchestrator.start_season(total_rounds=0, interval_sec=30)

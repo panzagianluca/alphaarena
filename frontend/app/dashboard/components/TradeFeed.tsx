@@ -26,19 +26,16 @@ function ActionBadge({ action }: { action: string }) {
 }
 
 export function TradeFeed({ trades }: { trades: Trade[] }) {
-  if (trades.length === 0) {
-    return (
-      <div className="h-full flex items-center justify-center">
-        <p className="text-xs text-white/30">No trades yet. Start a season to begin.</p>
-      </div>
-    )
-  }
-
   return (
     <div className="h-full flex flex-col overflow-hidden border-t border-[#1a1a1a]/50">
       <div className="px-4 py-2 border-b border-[#1a1a1a]/50">
         <h3 className="text-xs uppercase tracking-widest text-[#c9a84c]/60" style={{ fontFamily: "var(--font-poppins)" }}>Activity</h3>
       </div>
+      {trades.length === 0 ? (
+        <div className="flex-1 flex items-center justify-center">
+          <p className="text-xs text-white/30">No trades yet. Start a season to begin.</p>
+        </div>
+      ) : (
       <div className="flex-1 overflow-y-auto thin-scrollbar">
         <table className="w-full border-collapse">
           <thead className="sticky top-0 bg-[#080808] z-10">
@@ -104,6 +101,7 @@ export function TradeFeed({ trades }: { trades: Trade[] }) {
           </tbody>
         </table>
       </div>
+      )}
     </div>
   )
 }
