@@ -73,7 +73,13 @@ async def startup():
     app.state.db = db
     logger.info("Database initialized")
 
-    # 2. Hedera client
+    # 2. Hedera client — auto-generate wallets.json if missing
+    import os, json
+    wp = os.environ.get("WALLET_POOL_PATH", "./wallets.json")
+    if not os.path.exists(wp):
+        logger.info("wallets.json not found, generating stubs...")
+        from engine.scripts.setup_hedera import run_stub
+        run_stub()
     hedera = HederaClient()
     app.state.hedera_client = hedera
     logger.info("Hedera client initialized (stub_mode=%s)", hedera.stub_mode)
