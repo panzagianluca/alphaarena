@@ -211,8 +211,8 @@ export default function AgentProfile() {
                       color: "rgba(255,255,255,0.8)",
                     }}
                     labelStyle={{ color: "rgba(255,255,255,0.5)" }}
-                    formatter={(value: number) => [`$${value.toLocaleString()}`, "Portfolio"]}
-                    labelFormatter={(label: number) => `Update ${label}`}
+                    formatter={(value: any) => [`$${Number(value).toLocaleString()}`, "Portfolio"]}
+                    labelFormatter={(label: any) => `Update ${label}`}
                   />
                   <Area
                     type="monotone"
