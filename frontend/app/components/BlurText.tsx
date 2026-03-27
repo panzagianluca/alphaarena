@@ -6,12 +6,14 @@ interface BlurTextProps {
   text: string;
   className?: string;
   delay?: number;
+  wordDelay?: number;
 }
 
 export default function BlurText({
   text,
   className = "",
   delay = 0,
+  wordDelay: _wordDelay,
 }: BlurTextProps) {
   const [isAnimating, setIsAnimating] = useState(false);
 

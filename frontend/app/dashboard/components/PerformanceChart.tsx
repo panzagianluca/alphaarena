@@ -129,11 +129,11 @@ export function PerformanceChart({
                 }}
                 labelStyle={{ color: "rgba(255,255,255,0.5)" }}
                 itemStyle={{ color: "rgba(255,255,255,0.8)" }}
-                formatter={(value: number, name: string) => [
-                  `$${value.toLocaleString()}`,
-                  name,
+                formatter={(value: any, name: any) => [
+                  `$${Number(value).toLocaleString()}`,
+                  String(name),
                 ]}
-                labelFormatter={(label: number) => `Update ${label}`}
+                labelFormatter={(label: any) => `Update ${label}`}
               />
               {visibleAgents.map((name) => {
                 const colorIndex = allAgentNames.indexOf(name)
